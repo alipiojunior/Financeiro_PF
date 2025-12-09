@@ -2,11 +2,9 @@
   (:import (java.time LocalDate Instant ZoneId)
            (java.time.format DateTimeParseException)))
 
-;; Átomos para armazenar transações e saldo da carteira
 (def transacoes (atom []))
 (def saldo (atom 0.0))
 
-;; Helper: tenta parsear várias formas de data
 (defn parse-data
   "Tenta converter s (string ou LocalDate) para java.time.LocalDate.
    Aceita 'YYYY-MM-DD' e timestamps ISO como '2025-12-08T14:15:00.000Z'.
@@ -16,19 +14,17 @@
     (nil? s) nil
     (instance? LocalDate s) s
     :else
-    (try
-      ;; tentativa direta como YYYY-MM-DD
+    (try 
+      
       (LocalDate/parse (str s))
       (catch Exception _
         (try
-          ;; tentativa como Instant/ISO_INSTANT -> convert para LocalDate
           (-> (Instant/parse (str s))
               (.atZone (ZoneId/systemDefault))
               (.toLocalDate))
           (catch Exception _
             nil))))))
 
-;; Normaliza valor (garante número)
 (defn parse-valor
   "Converte diferentes tipos de :valor para double. Se falhar, retorna 0.0."
   [v]
@@ -38,22 +34,21 @@
     (string? v) (try (Double/parseDouble v) (catch Exception _ 0.0))
     :else 0.0))
 
-;; Adiciona transação e atualiza saldo conforme tipo
+
 (defn add-transacao!
   "Adiciona transação ao átomo transacoes e atualiza o saldo.
    t deve ter chaves: :tipo (\"compra\" ou \"venda\"), :data (string ou LocalDate),
    :ticker, :quantidade, :valor (número ou string). Retorna a transação gravada."
   [t]
   (let [valor (parse-valor (:valor t))
-        data-ld (or (parse-data (:data t)) ;; manter a data original se parse ok
-                    ;; se parse falhar, registra como string para depuração
+        data-ld (or (parse-data (:data t)) 
                     nil)
         trans (-> t
                   (assoc :valor valor)
                   (assoc :data (if data-ld (.toString data-ld) (:data t))))]
-    ;; gravar transação
+    
     (swap! transacoes conj trans)
-    ;; atualizar saldo lógico: compra reduz saldo, venda aumenta saldo
+    
     (swap! saldo (fn [s]
                    (case (:tipo trans)
                      "compra" (- s valor)
@@ -89,7 +84,6 @@
                             (not (.isAfter td df)))))))
          vec)))
 
-;; Funções utilitárias de teste / limpeza (opcionais)
 (defn reset-db!
   "Reseta transacoes e saldo (útil para testes)."
   []

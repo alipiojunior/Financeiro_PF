@@ -7,11 +7,11 @@
 
 (defroutes app-routes
 
-  ;; 1. Consultar ação
+  
   (GET "/acao/:ticker" [ticker]
     (resp/response (svc/consultar-acao ticker)))
 
-  ;; 2. Registrar compra
+  
   (POST "/compra" {body :body}
     (let [{:keys [data ticker quantidade preco-total]} body
           trans {:tipo "compra"
@@ -22,7 +22,7 @@
       (db/add-transacao! trans)
       (resp/response {:ok true :transacao trans})))
 
-  ;; 3. Registrar venda
+  
   (POST "/venda" {body :body}
     (let [{:keys [data ticker quantidade preco-total]} body
           trans {:tipo "venda"
@@ -33,11 +33,11 @@
       (db/add-transacao! trans)
       (resp/response {:ok true :transacao trans})))
 
-  ;; 4. Extrato por período via API
+  
   (GET "/extrato" [data-inicial data-final]
     (resp/response (db/filtrar-por-periodo data-inicial data-final)))
 
-  ;; 5. Saldo da carteira
+  
   (GET "/saldo" []
     (resp/response {:saldo (db/saldo)}))
 
